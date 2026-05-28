@@ -45,7 +45,7 @@ export default function RevealScreen({ state, setState, onOpenRules, onAskReset 
   }, [card?.id]);
 
   if (!card || !me) return null;
-  const rule = CARD_RULES[card.rank];
+  const rule = resolveRule(state, card.rank);
   const others = state.players.filter((p) => p.id !== me.id);
   const isFourthKing = card.rank === 'K' && state.kingsDrawn >= 4;
   const dethroned =

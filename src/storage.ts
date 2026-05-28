@@ -49,6 +49,8 @@ function isValid(state: unknown): state is GameState {
   if (typeof s.phase !== 'string' || !PHASES.includes(s.phase as Phase)) return false;
   if (s.phase !== 'setup' && (s.players as unknown[]).length < 2) return false;
   if (s.phase === 'reveal' && !isCard(s.current)) return false;
+  if (typeof s.cardOverrides !== 'object' || s.cardOverrides === null || Array.isArray(s.cardOverrides)) return false;
+  if (!Array.isArray(s.startingRules) || !(s.startingRules as unknown[]).every((r) => typeof r === 'string')) return false;
   return true;
 }
 
