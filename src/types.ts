@@ -56,7 +56,8 @@ export type GameState = {
   version: number;
   cardOverrides: Partial<Record<Rank, CardOverride>>;
   startingRules: string[];
+  matesCount: number;
 };
 
-export const STORAGE_KEY = 'kings-cup:v4';
-export const STATE_VERSION = 4;
+export const STORAGE_KEY = 'kings-cup:v5';
+export const STATE_VERSION = 5;

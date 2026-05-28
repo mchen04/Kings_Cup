@@ -16,7 +16,7 @@ export default function DrawScreen({ state, setState, onOpenRules, onAskReset }:
 
   return (
     <main className="screen draw">
-      <TopBar onOpenRules={onOpenRules} onAskReset={onAskReset} />
+      <TopBar onOpenRules={onOpenRules} onAskReset={onAskReset} player={me} />
 
       <div className="draw-header">
         <p className="muted">It's your turn,</p>
@@ -29,6 +29,7 @@ export default function DrawScreen({ state, setState, onOpenRules, onAskReset }:
           onClick={() => setState((s) => drawCard(s))}
           aria-label="Draw a card"
           disabled={remaining === 0}
+          autoFocus
         >
           <span className="card-back">
             <span className="card-back-inner">

@@ -15,7 +15,7 @@ export default function GameOverScreen({ state, onReset, onOpenRules }: Props) {
       <div className="gameover-content">
         <p className="gameover-eyebrow">Fourth King drawn</p>
         <h1 className="gameover-title">
-          {winner ? <span style={{ color: winner.color }}>{winner.name}</span> : 'The drawer'} drinks the cup
+          {winner ? <span style={{ color: winner.color }}>{winner.name}</span> : 'The drawer'} drinks the bitch cup
         </h1>
         <p className="gameover-sub">The game is over. Cheers, everyone.</p>
 
@@ -27,10 +27,6 @@ export default function GameOverScreen({ state, onReset, onOpenRules }: Props) {
           <div className="stat">
             <span className="stat-num">{state.rules.length}</span>
             <span className="stat-label">house rules</span>
-          </div>
-          <div className="stat">
-            <span className="stat-num">{state.mates.length}</span>
-            <span className="stat-label">mates made</span>
           </div>
         </div>
 

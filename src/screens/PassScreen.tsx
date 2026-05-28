@@ -15,12 +15,12 @@ export default function PassScreen({ state, setState, onOpenRules, onAskReset }:
 
   return (
     <main className="screen pass">
-      <TopBar onOpenRules={onOpenRules} onAskReset={onAskReset} />
+      <TopBar onOpenRules={onOpenRules} onAskReset={onAskReset} player={me} />
 
       <div className="pass-hero" key={me.id}>
-        <p className="pass-label">Pass to</p>
+        <p className="pass-label">It's your turn</p>
         <h1 className="pass-name" style={{ color: me.color }}>{me.name}</h1>
-        <p className="pass-sub">Tap when you're holding the phone.</p>
+        <p className="pass-sub">Tap when you're ready.</p>
       </div>
 
       <div className="primary-action">

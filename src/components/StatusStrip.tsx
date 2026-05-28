@@ -10,8 +10,9 @@ export default function StatusStrip({ state }: Props) {
   const qm = findPlayer(state, state.questionMaster);
   const hasMates = state.mates.length > 0;
   const hasRules = state.rules.length > 0;
+  const hasHouseRules = state.startingRules.length > 0;
 
-  if (!qm && !hasMates && !hasRules) {
+  if (!qm && !hasMates && !hasRules && !hasHouseRules) {
     return (
       <aside className="status-strip empty" aria-label="Active rules">
         <span className="muted small">No active rules yet.</span>
@@ -60,6 +61,16 @@ export default function StatusStrip({ state }: Props) {
                 </li>
               );
             })}
+          </ul>
+        </div>
+      )}
+      {hasHouseRules && (
+        <div className="status-chip house-rules">
+          <span className="chip-label">House Rules</span>
+          <ul className="chip-list">
+            {state.startingRules.map((text, i) => (
+              <li key={i}>{text}</li>
+            ))}
           </ul>
         </div>
       )}

@@ -24,27 +24,32 @@ function MiniCard({ card, offset }: { card: Card; offset: number }) {
   );
 }
 
-export default function CardLog({ state }: Props) {
-  if (state.drawn.length === 0) return null;
+function GhostCard({ rank }: { rank: Rank }) {
+  return (
+    <div className="mini-card ghost" style={{ left: 0 }} aria-hidden="true">
+      <span className="mini-card-rank">{rank}</span>
+    </div>
+  );
+}
 
+export default function CardLog({ state }: Props) {
   const byRank: Partial<Record<Rank, Card[]>> = {};
   for (const card of state.drawn) {
     (byRank[card.rank] ??= []).push(card);
   }
 
-  const drawnRanks = RANKS.filter((r) => byRank[r]);
-
   return (
     <aside className="card-log" aria-label="Cards drawn">
       <p className="card-log-heading">Drawn</p>
       <ul className="card-log-list">
-        {drawnRanks.map((rank) => {
-          const cards = byRank[rank]!;
+        {RANKS.map((rank) => {
+          const cards = byRank[rank] ?? [];
           const rule = CARD_RULES[rank];
-          const stackWidth = 38 + (cards.length - 1) * 8;
+          const stackWidth = 38 + Math.max(0, cards.length - 1) * 8;
           return (
             <li key={rank} className="card-log-group">
               <div className="card-stack" style={{ width: stackWidth }}>
+                <GhostCard rank={rank} />
                 {cards.map((card, i) => (
                   <MiniCard key={card.id} card={card} offset={i} />
                 ))}

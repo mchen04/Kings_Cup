@@ -3,7 +3,7 @@ import type { GameState, Rank } from '../types';
 import {
   addPlayer, addStartingRule, clearCardOverride,
   MAX_PLAYERS, PLAYER_COLORS, removePlayer, removeStartingRule,
-  renamePlayer, setCardOverride, setPlayerColor, startGame,
+  renamePlayer, setCardOverride, setMatesCount, setPlayerColor, startGame,
 } from '../engine/game';
 import { CARD_RULES } from '../engine/rules';
 
@@ -21,6 +21,7 @@ export default function SetupScreen({ state, setState, onOpenRules }: Props) {
   const [editName, setEditName] = useState('');
   const [colorPickerId, setColorPickerId] = useState<string | null>(null);
   const [expandedRank, setExpandedRank] = useState<Rank | null>(null);
+  const [cardRulesOpen, setCardRulesOpen] = useState(false);
   const [houseRuleText, setHouseRuleText] = useState('');
 
   const canStart = state.players.length >= 2;
@@ -164,13 +165,21 @@ export default function SetupScreen({ state, setState, onOpenRules }: Props) {
 
       {/* Card Rules */}
       <section className="card-panel" aria-labelledby="card-rules-title">
-        <div className="panel-head">
+        <button
+          className="panel-head panel-head-toggle"
+          type="button"
+          onClick={() => setCardRulesOpen((o) => !o)}
+          aria-expanded={cardRulesOpen}
+        >
           <h2 id="card-rules-title">Card Rules</h2>
-          {Object.keys(state.cardOverrides).length > 0 && (
-            <span className="count-pill">{Object.keys(state.cardOverrides).length} modified</span>
-          )}
-        </div>
-        <ul className="rank-list">
+          <div className="panel-head-right">
+            {Object.keys(state.cardOverrides).length > 0 && (
+              <span className="count-pill">{Object.keys(state.cardOverrides).length} modified</span>
+            )}
+            <span className="panel-chevron">{cardRulesOpen ? '▲' : '▼'}</span>
+          </div>
+        </button>
+        {cardRulesOpen && <ul className="rank-list">
           {ALL_RANKS.map((rank) => {
             const base = CARD_RULES[rank];
             const ov = state.cardOverrides[rank];
@@ -197,6 +206,23 @@ export default function SetupScreen({ state, setState, onOpenRules }: Props) {
 
                 {isOpen && (
                   <div className="rank-editor">
+                    {rank === '8' && (
+                      <div className="rank-field">
+                        <span className="rank-field-label">Number of mates</span>
+                        <div className="mates-count-row">
+                          {[1, 2, 3, 4].map((n) => (
+                            <button
+                              key={n}
+                              type="button"
+                              className={`mates-count-btn ${state.matesCount === n ? 'active' : ''}`}
+                              onClick={() => setState((s) => setMatesCount(s, n))}
+                            >
+                              {n}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <label className="rank-field">
                       <span className="rank-field-label">Name</span>
                       <input
@@ -248,7 +274,7 @@ export default function SetupScreen({ state, setState, onOpenRules }: Props) {
               </li>
             );
           })}
-        </ul>
+        </ul>}
       </section>
 
       {/* Starting House Rules */}

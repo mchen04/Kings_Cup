@@ -51,6 +51,7 @@ function isValid(state: unknown): state is GameState {
   if (s.phase === 'reveal' && !isCard(s.current)) return false;
   if (typeof s.cardOverrides !== 'object' || s.cardOverrides === null || Array.isArray(s.cardOverrides)) return false;
   if (!Array.isArray(s.startingRules) || !(s.startingRules as unknown[]).every((r) => typeof r === 'string')) return false;
+  if (typeof s.matesCount !== 'number' || s.matesCount < 1 || s.matesCount > 4) return false;
   return true;
 }
 

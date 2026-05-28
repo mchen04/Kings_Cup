@@ -25,6 +25,7 @@ export function emptyState(): GameState {
     version: STATE_VERSION,
     cardOverrides: {},
     startingRules: [],
+    matesCount: 1,
   };
 }
 
@@ -48,6 +49,7 @@ export function startGame(s: GameState): GameState {
     prevQuestionMaster: null,
     phase: 'pass',
     version: STATE_VERSION,
+    matesCount: s.matesCount ?? 1,
   };
 }
 
@@ -94,12 +96,18 @@ export function drawCard(s: GameState): GameState {
   };
 }
 
-export function setMate(s: GameState, mateId: string): GameState {
+export function setMates(s: GameState, mateIds: string[]): GameState {
   const me = currentPlayer(s);
-  if (!me || me.id === mateId) return s;
+  if (!me) return s;
   const others = s.mates.filter((m) => m.a !== me.id && m.b !== me.id);
-  const next: Mate = { a: me.id, b: mateId };
-  return { ...s, mates: [...others, next] };
+  const newMates: Mate[] = mateIds
+    .filter((id) => id !== me.id)
+    .map((id) => ({ a: me.id, b: id }));
+  return { ...s, mates: [...others, ...newMates] };
+}
+
+export function setMatesCount(s: GameState, count: number): GameState {
+  return { ...s, matesCount: Math.max(1, Math.min(4, count)) };
 }
 
 export function addCustomRule(s: GameState, text: string): GameState {
