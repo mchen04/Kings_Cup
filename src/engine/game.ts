@@ -120,7 +120,7 @@ export function addCustomRule(s: GameState, text: string): GameState {
     text: trimmed.slice(0, 140),
     authorId,
   };
-  return { ...s, rules: [rule] };
+  return { ...s, rules: [...s.rules, rule] };
 }
 
 export function endTurn(s: GameState): GameState {

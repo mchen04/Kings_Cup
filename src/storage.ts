@@ -55,12 +55,46 @@ function isValid(state: unknown): state is GameState {
   return true;
 }
 
+const LEGACY_KEYS = ['kings-cup:v2', 'kings-cup:v3', 'kings-cup:v4'];
+
+function tryMigrate(): GameState | null {
+  for (const key of LEGACY_KEYS) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      localStorage.removeItem(key);
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const migrated = {
+        ...parsed,
+        version: STATE_VERSION,
+        color: (parsed.color as string | undefined) ?? '#FF4757',
+        cardOverrides: (parsed.cardOverrides as object | undefined) ?? {},
+        startingRules: (parsed.startingRules as string[] | undefined) ?? [],
+        matesCount: (parsed.matesCount as number | undefined) ?? 1,
+        players: Array.isArray(parsed.players)
+          ? (parsed.players as Record<string, unknown>[]).map((p) => ({
+              ...p,
+              color: (p.color as string | undefined) ?? '#FF4757',
+            }))
+          : [],
+      };
+      if (isValid(migrated)) {
+        saveState(migrated);
+        return migrated;
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return null;
+}
+
 export function loadState(): GameState | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
+    if (!raw) return tryMigrate();
     const parsed = JSON.parse(raw);
-    return isValid(parsed) ? parsed : null;
+    return isValid(parsed) ? parsed : tryMigrate();
   } catch {
     return null;
   }

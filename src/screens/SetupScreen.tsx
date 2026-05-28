@@ -229,7 +229,7 @@ export default function SetupScreen({ state, setState, onOpenRules }: Props) {
                         className="text-input"
                         value={title}
                         onChange={(e) =>
-                          setState((s) => setCardOverride(s, rank, { title: e.target.value, short, description }))
+                          setState((s) => setCardOverride(s, rank, { title: e.target.value }))
                         }
                         maxLength={32}
                         placeholder={base.title}
@@ -241,7 +241,7 @@ export default function SetupScreen({ state, setState, onOpenRules }: Props) {
                         className="text-input"
                         value={short}
                         onChange={(e) =>
-                          setState((s) => setCardOverride(s, rank, { title, short: e.target.value, description }))
+                          setState((s) => setCardOverride(s, rank, { short: e.target.value }))
                         }
                         maxLength={48}
                         placeholder={base.short}
@@ -253,7 +253,7 @@ export default function SetupScreen({ state, setState, onOpenRules }: Props) {
                         className="text-input text-area"
                         value={description}
                         onChange={(e) =>
-                          setState((s) => setCardOverride(s, rank, { title, short, description: e.target.value }))
+                          setState((s) => setCardOverride(s, rank, { description: e.target.value }))
                         }
                         maxLength={200}
                         placeholder={base.description}

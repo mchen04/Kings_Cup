@@ -1,9 +1,8 @@
 import type { GameState } from '../types';
 import type { Rank, Card } from '../types';
-import { CARD_RULES } from '../engine/rules';
+import { resolveRule } from '../engine/rules';
 import { suitSymbol, suitColor } from '../engine/deck';
 
-const RANKS: Rank[] = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 
 type Props = {
   state: GameState;
@@ -24,32 +23,38 @@ function MiniCard({ card, offset }: { card: Card; offset: number }) {
   );
 }
 
-function GhostCard({ rank }: { rank: Rank }) {
-  return (
-    <div className="mini-card ghost" style={{ left: 0 }} aria-hidden="true">
-      <span className="mini-card-rank">{rank}</span>
-    </div>
-  );
-}
 
 export default function CardLog({ state }: Props) {
   const byRank: Partial<Record<Rank, Card[]>> = {};
+  const rankOrder: Rank[] = [];
   for (const card of state.drawn) {
-    (byRank[card.rank] ??= []).push(card);
+    if (!byRank[card.rank]) {
+      byRank[card.rank] = [];
+      rankOrder.push(card.rank);
+    }
+    byRank[card.rank]!.push(card);
+  }
+
+  if (rankOrder.length === 0) {
+    return (
+      <aside className="card-log" aria-label="Cards drawn">
+        <p className="card-log-heading">Drawn</p>
+        <p className="muted small" style={{ textAlign: 'center', fontSize: 12 }}>No cards yet.</p>
+      </aside>
+    );
   }
 
   return (
     <aside className="card-log" aria-label="Cards drawn">
       <p className="card-log-heading">Drawn</p>
       <ul className="card-log-list">
-        {RANKS.map((rank) => {
-          const cards = byRank[rank] ?? [];
-          const rule = CARD_RULES[rank];
+        {rankOrder.map((rank) => {
+          const cards = byRank[rank]!;
+          const rule = resolveRule(state, rank);
           const stackWidth = 38 + Math.max(0, cards.length - 1) * 8;
           return (
             <li key={rank} className="card-log-group">
               <div className="card-stack" style={{ width: stackWidth }}>
-                <GhostCard rank={rank} />
                 {cards.map((card, i) => (
                   <MiniCard key={card.id} card={card} offset={i} />
                 ))}

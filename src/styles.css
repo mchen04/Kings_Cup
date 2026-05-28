@@ -945,6 +945,12 @@ body.modal-open {
 @keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes sheetIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
+@media (max-width: 719px) {
+  .app-content { flex-direction: column; align-items: center; }
+  .left-sidebar, .right-sidebar { display: none; }
+  .screen { min-width: 0; }
+}
+
 @media (min-width: 720px) {
   .modal-scrim { place-items: center; }
 }

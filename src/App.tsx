@@ -69,13 +69,13 @@ export default function App() {
   return (
     <div className="app">
       <div className="app-content" ref={contentRef}>
-        {state.phase !== 'setup' && (
+        {state.phase !== 'setup' && state.phase !== 'gameover' && (
           <div className="left-sidebar">
             <CardLog state={state} />
           </div>
         )}
         {screen}
-        {state.phase !== 'setup' && (
+        {state.phase !== 'setup' && state.phase !== 'gameover' && (
           <div className="right-sidebar">
             <StatusStrip state={state} />
           </div>

@@ -48,7 +48,7 @@ export default function RevealScreen({ state, setState, onOpenRules, onAskReset 
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
+      if (e.key !== 'Enter') return;
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON') return;
       if (!continueRef.current.enabled || !continueRef.current.fn) return;
@@ -69,7 +69,7 @@ export default function RevealScreen({ state, setState, onOpenRules, onAskReset 
     state.prevQuestionMaster !== state.questionMaster;
   const dethronedPlayer = dethroned ? findPlayer(state, state.prevQuestionMaster) : null;
 
-  const matesCount = state.matesCount ?? 1;
+  const matesCount = Math.min(state.matesCount, others.length);
   const matesReady = mateIds.length >= matesCount;
 
   const handleContinue = () => {
@@ -111,7 +111,7 @@ export default function RevealScreen({ state, setState, onOpenRules, onAskReset 
           </h2>
           <p className="reveal-desc">
             {isFourthKing
-              ? <><span style={{ color: me.color }}>{me.name}</span> drinks the bitch cup. The game ends here.</>
+              ? <><span style={{ color: me.color }}>{me.name}</span> drinks the King's Cup. The game ends here.</>
               : rule.description}
           </p>
           {dethroned && dethronedPlayer && (

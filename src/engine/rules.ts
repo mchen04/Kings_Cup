@@ -34,6 +34,7 @@ export const CARD_RULES: Record<Rank, CardRule> = {
     title: 'You',
     short: 'Pick a player to sip',
     description: 'Choose another player. They take a sip.',
+    needsTarget: true,
   },
   '3': {
     rank: '3',

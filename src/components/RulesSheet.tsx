@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { GameState } from '../types';
-import { CARD_RULES } from '../engine/rules';
+import { resolveRule } from '../engine/rules';
 import { findPlayer } from '../engine/game';
 
 type Props = {
@@ -44,7 +44,7 @@ export default function RulesSheet({ state, onClose }: Props) {
           <h3>Cards</h3>
           <ul className="rules-list">
             {RANK_ORDER.map((rank) => {
-              const r = CARD_RULES[rank];
+              const r = resolveRule(state, rank);
               return (
                 <li key={rank} className="rules-row">
                   <span className="rules-rank">{r.rank}</span>
