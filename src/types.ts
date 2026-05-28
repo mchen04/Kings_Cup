@@ -13,6 +13,7 @@ export type Card = {
 export type Player = {
   id: string;
   name: string;
+  color: string;
 };
 
 export type Mate = {
@@ -24,6 +25,12 @@ export type CustomRule = {
   id: string;
   text: string;
   authorId: string;
+};
+
+export type CardOverride = {
+  title: string;
+  short: string;
+  description: string;
 };
 
 export type Phase =
@@ -47,7 +54,9 @@ export type GameState = {
   prevQuestionMaster: string | null;
   phase: Phase;
   version: number;
+  cardOverrides: Partial<Record<Rank, CardOverride>>;
+  startingRules: string[];
 };
 
-export const STORAGE_KEY = 'kings-cup:v2';
-export const STATE_VERSION = 2;
+export const STORAGE_KEY = 'kings-cup:v4';
+export const STATE_VERSION = 4;

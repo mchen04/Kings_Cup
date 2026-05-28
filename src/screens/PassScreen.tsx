@@ -1,6 +1,5 @@
 import type { GameState } from '../types';
 import { currentPlayer, startTurn } from '../engine/game';
-import StatusStrip from '../components/StatusStrip';
 import TopBar from '../components/TopBar';
 
 type Props = {
@@ -20,7 +19,7 @@ export default function PassScreen({ state, setState, onOpenRules, onAskReset }:
 
       <div className="pass-hero" key={me.id}>
         <p className="pass-label">Pass to</p>
-        <h1 className="pass-name">{me.name}</h1>
+        <h1 className="pass-name" style={{ color: me.color }}>{me.name}</h1>
         <p className="pass-sub">Tap when you're holding the phone.</p>
       </div>
 
@@ -34,7 +33,6 @@ export default function PassScreen({ state, setState, onOpenRules, onAskReset }:
         </button>
       </div>
 
-      <StatusStrip state={state} />
     </main>
   );
 }

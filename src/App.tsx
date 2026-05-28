@@ -9,6 +9,8 @@ import RevealScreen from './screens/RevealScreen';
 import GameOverScreen from './screens/GameOverScreen';
 import RulesSheet from './components/RulesSheet';
 import ConfirmDialog from './components/ConfirmDialog';
+import CardLog from './components/CardLog';
+import StatusStrip from './components/StatusStrip';
 
 export default function App() {
   const [state, setState] = useState<GameState>(() => loadState() ?? emptyState());
@@ -67,7 +69,17 @@ export default function App() {
   return (
     <div className="app">
       <div className="app-content" ref={contentRef}>
+        {state.phase !== 'setup' && (
+          <div className="left-sidebar">
+            <CardLog state={state} />
+          </div>
+        )}
         {screen}
+        {state.phase !== 'setup' && (
+          <div className="right-sidebar">
+            <StatusStrip state={state} />
+          </div>
+        )}
       </div>
       {showRules && <RulesSheet state={state} onClose={() => setShowRules(false)} />}
       {confirmReset && (

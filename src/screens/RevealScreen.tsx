@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { GameState } from '../types';
-import { CARD_RULES } from '../engine/rules';
+import { resolveRule } from '../engine/rules';
 import {
   addCustomRule,
   currentPlayer,
@@ -9,7 +9,6 @@ import {
   setMate,
 } from '../engine/game';
 import CardFace from '../components/CardFace';
-import StatusStrip from '../components/StatusStrip';
 import TopBar from '../components/TopBar';
 
 type Props = {
@@ -92,12 +91,12 @@ export default function RevealScreen({ state, setState, onOpenRules, onAskReset 
           </h2>
           <p className="reveal-desc">
             {isFourthKing
-              ? `${me.name} drinks whatever is in the King's Cup. The game ends here.`
+              ? <><span style={{ color: me.color }}>{me.name}</span> drinks whatever is in the King's Cup. The game ends here.</>
               : rule.description}
           </p>
           {dethroned && dethronedPlayer && (
             <p className="reveal-aside">
-              {dethronedPlayer.name} is no longer Question Master.
+              <span style={{ color: dethronedPlayer.color }}>{dethronedPlayer.name}</span> is no longer Question Master.
             </p>
           )}
         </div>
@@ -112,17 +111,18 @@ export default function RevealScreen({ state, setState, onOpenRules, onAskReset 
                 key={p.id}
                 className={`chip ${targetId === p.id ? 'on' : ''}`}
                 onClick={() => setTargetId(p.id)}
+                style={targetId === p.id ? undefined : { borderColor: p.color, color: p.color }}
                 type="button"
               >
                 {p.name}
               </button>
             ))}
           </div>
-          {targetId && (
+          {targetId && (() => { const t = findPlayer(state, targetId); return t ? (
             <p className="picker-note">
-              {findPlayer(state, targetId)?.name} takes a sip.
+              <span style={{ color: t.color }}>{t.name}</span> takes a sip.
             </p>
-          )}
+          ) : null; })()}
         </fieldset>
       )}
 
@@ -135,6 +135,7 @@ export default function RevealScreen({ state, setState, onOpenRules, onAskReset 
                 key={p.id}
                 className={`chip ${mateId === p.id ? 'on' : ''}`}
                 onClick={() => setMateId(p.id)}
+                style={mateId === p.id ? undefined : { borderColor: p.color, color: p.color }}
                 type="button"
               >
                 {p.name}
@@ -168,7 +169,6 @@ export default function RevealScreen({ state, setState, onOpenRules, onAskReset 
         </button>
       </div>
 
-      <StatusStrip state={state} />
     </main>
   );
 }

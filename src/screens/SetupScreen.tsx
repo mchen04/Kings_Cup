@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { GameState } from '../types';
-import { addPlayer, MAX_PLAYERS, removePlayer, renamePlayer, startGame } from '../engine/game';
+import { addPlayer, MAX_PLAYERS, PLAYER_COLORS, removePlayer, renamePlayer, setPlayerColor, startGame } from '../engine/game';
 
 type Props = {
   state: GameState;
@@ -12,6 +12,7 @@ export default function SetupScreen({ state, setState, onOpenRules }: Props) {
   const [name, setName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const [colorPickerId, setColorPickerId] = useState<string | null>(null);
 
   const canStart = state.players.length >= 2;
   const atMax = state.players.length >= MAX_PLAYERS;
@@ -25,6 +26,7 @@ export default function SetupScreen({ state, setState, onOpenRules }: Props) {
   };
 
   const beginEdit = (id: string, current: string) => {
+    setColorPickerId(null);
     setEditingId(id);
     setEditName(current);
   };
@@ -37,7 +39,7 @@ export default function SetupScreen({ state, setState, onOpenRules }: Props) {
   };
 
   return (
-    <main className="screen setup">
+    <main className="screen setup" onClick={() => setColorPickerId(null)}>
       <header className="hero">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">♛</span>
@@ -78,6 +80,34 @@ export default function SetupScreen({ state, setState, onOpenRules }: Props) {
           {state.players.map((p, i) => (
             <li key={p.id} className="player-row">
               <span className="player-seat" aria-hidden="true">{i + 1}</span>
+
+              <div className="color-picker-wrap" onClick={(e) => e.stopPropagation()}>
+                <button
+                  className="color-dot-btn"
+                  style={{ background: p.color }}
+                  aria-label={`Change color for ${p.name}`}
+                  onClick={() => setColorPickerId(colorPickerId === p.id ? null : p.id)}
+                  type="button"
+                />
+                {colorPickerId === p.id && (
+                  <div className="color-swatch-grid">
+                    {PLAYER_COLORS.map((c) => (
+                      <button
+                        key={c}
+                        className={`color-swatch ${p.color === c ? 'active' : ''}`}
+                        style={{ background: c }}
+                        aria-label={c}
+                        type="button"
+                        onClick={() => {
+                          setState((s) => setPlayerColor(s, p.id, c));
+                          setColorPickerId(null);
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {editingId === p.id ? (
                 <input
                   className="text-input inline-edit"
@@ -98,6 +128,7 @@ export default function SetupScreen({ state, setState, onOpenRules }: Props) {
               ) : (
                 <button
                   className="player-name"
+                  style={{ color: p.color }}
                   onClick={() => beginEdit(p.id, p.name)}
                   aria-label={`Rename ${p.name}`}
                 >

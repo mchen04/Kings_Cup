@@ -4,12 +4,9 @@ import { STATE_VERSION, STORAGE_KEY } from './types';
 const PHASES: Phase[] = ['setup', 'pass', 'draw', 'reveal', 'gameover'];
 
 function isPlayer(v: unknown): boolean {
-  return (
-    !!v &&
-    typeof v === 'object' &&
-    typeof (v as { id?: unknown }).id === 'string' &&
-    typeof (v as { name?: unknown }).name === 'string'
-  );
+  if (!v || typeof v !== 'object') return false;
+  const p = v as { id?: unknown; name?: unknown; color?: unknown };
+  return typeof p.id === 'string' && typeof p.name === 'string' && typeof p.color === 'string';
 }
 
 function isCard(v: unknown): boolean {

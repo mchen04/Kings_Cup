@@ -1,5 +1,5 @@
 import { buildDeck, shuffle } from './deck';
-import type { CustomRule, GameState, Mate, Phase, Player } from '../types';
+import type { CardOverride, CustomRule, GameState, Mate, Phase, Player, Rank } from '../types';
 import { STATE_VERSION } from '../types';
 
 function rid(prefix: string): string {
@@ -23,12 +23,19 @@ export function emptyState(): GameState {
     prevQuestionMaster: null,
     phase: 'setup',
     version: STATE_VERSION,
+    cardOverrides: {},
+    startingRules: [],
   };
 }
 
-export function startGame(players: Player[]): GameState {
+export function startGame(s: GameState): GameState {
+  const seedRules: CustomRule[] = s.startingRules.map((text) => ({
+    id: rid('rule'),
+    text,
+    authorId: 'house',
+  }));
   return {
-    players,
+    ...s,
     turnIndex: 0,
     deck: shuffle(buildDeck()),
     drawn: [],
@@ -36,7 +43,7 @@ export function startGame(players: Player[]): GameState {
     kingsDrawn: 0,
     cupFill: 0,
     mates: [],
-    rules: [],
+    rules: seedRules,
     questionMaster: null,
     prevQuestionMaster: null,
     phase: 'pass',
@@ -105,7 +112,7 @@ export function addCustomRule(s: GameState, text: string): GameState {
     text: trimmed.slice(0, 140),
     authorId,
   };
-  return { ...s, rules: [...s.rules, rule] };
+  return { ...s, rules: [rule] };
 }
 
 export function endTurn(s: GameState): GameState {
@@ -131,12 +138,55 @@ export function resetGame(): GameState {
   return emptyState();
 }
 
+export function setCardOverride(s: GameState, rank: Rank, override: Partial<CardOverride>): GameState {
+  const existing = s.cardOverrides[rank];
+  return {
+    ...s,
+    cardOverrides: {
+      ...s.cardOverrides,
+      [rank]: { ...existing, ...override } as CardOverride,
+    },
+  };
+}
+
+export function clearCardOverride(s: GameState, rank: Rank): GameState {
+  const next = { ...s.cardOverrides };
+  delete next[rank];
+  return { ...s, cardOverrides: next };
+}
+
+export function addStartingRule(s: GameState, text: string): GameState {
+  const trimmed = text.trim().slice(0, 140);
+  if (!trimmed) return s;
+  return { ...s, startingRules: [...s.startingRules, trimmed] };
+}
+
+export function removeStartingRule(s: GameState, index: number): GameState {
+  return { ...s, startingRules: s.startingRules.filter((_, i) => i !== index) };
+}
+
+export const PLAYER_COLORS = [
+  '#FF4757', '#FF6348', '#FFA502', '#FFD32A',
+  '#7BED9F', '#2ED573', '#00D2D3', '#1E90FF',
+  '#70A1FF', '#5352ED', '#A29BFE', '#FF6EB4',
+  '#FF4FC8', '#FD79A8', '#FF9FF3', '#ECCC68',
+  '#48DBFB', '#54A0FF', '#55EFC4', '#FFEAA7',
+];
+
 export function addPlayer(s: GameState, name: string): GameState {
   const trimmed = name.trim();
   if (!trimmed) return s;
   if (s.players.length >= 20) return s;
-  const player: Player = { id: rid('p'), name: trimmed.slice(0, 24) };
+  const usedColors = new Set(s.players.map((p) => p.color));
+  const color =
+    PLAYER_COLORS.find((c) => !usedColors.has(c)) ??
+    PLAYER_COLORS[s.players.length % PLAYER_COLORS.length];
+  const player: Player = { id: rid('p'), name: trimmed.slice(0, 24), color };
   return { ...s, players: [...s.players, player] };
+}
+
+export function setPlayerColor(s: GameState, id: string, color: string): GameState {
+  return { ...s, players: s.players.map((p) => (p.id === id ? { ...p, color } : p)) };
 }
 
 export function removePlayer(s: GameState, id: string): GameState {

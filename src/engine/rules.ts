@@ -1,4 +1,4 @@
-import type { Rank } from '../types';
+import type { GameState, Rank } from '../types';
 
 export type CardRule = {
   rank: Rank;
@@ -9,6 +9,18 @@ export type CardRule = {
   needsMate?: boolean;
   needsRule?: boolean;
 };
+
+export function resolveRule(s: GameState, rank: Rank): CardRule {
+  const base = CARD_RULES[rank];
+  const ov = s.cardOverrides[rank];
+  if (!ov) return base;
+  return {
+    ...base,
+    title: ov.title || base.title,
+    short: ov.short || base.short,
+    description: ov.description || base.description,
+  };
+}
 
 export const CARD_RULES: Record<Rank, CardRule> = {
   A: {
@@ -22,7 +34,6 @@ export const CARD_RULES: Record<Rank, CardRule> = {
     title: 'You',
     short: 'Pick a player to sip',
     description: 'Choose another player. They take a sip.',
-    needsTarget: true,
   },
   '3': {
     rank: '3',
