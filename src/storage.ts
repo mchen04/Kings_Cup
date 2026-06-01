@@ -4,12 +4,9 @@ import { STATE_VERSION, STORAGE_KEY } from './types';
 const PHASES: Phase[] = ['setup', 'pass', 'draw', 'reveal', 'gameover'];
 
 function isPlayer(v: unknown): boolean {
-  return (
-    !!v &&
-    typeof v === 'object' &&
-    typeof (v as { id?: unknown }).id === 'string' &&
-    typeof (v as { name?: unknown }).name === 'string'
-  );
+  if (!v || typeof v !== 'object') return false;
+  const p = v as { id?: unknown; name?: unknown; color?: unknown };
+  return typeof p.id === 'string' && typeof p.name === 'string' && typeof p.color === 'string';
 }
 
 function isCard(v: unknown): boolean {
@@ -52,15 +49,52 @@ function isValid(state: unknown): state is GameState {
   if (typeof s.phase !== 'string' || !PHASES.includes(s.phase as Phase)) return false;
   if (s.phase !== 'setup' && (s.players as unknown[]).length < 2) return false;
   if (s.phase === 'reveal' && !isCard(s.current)) return false;
+  if (typeof s.cardOverrides !== 'object' || s.cardOverrides === null || Array.isArray(s.cardOverrides)) return false;
+  if (!Array.isArray(s.startingRules) || !(s.startingRules as unknown[]).every((r) => typeof r === 'string')) return false;
+  if (typeof s.matesCount !== 'number' || s.matesCount < 1 || s.matesCount > 4) return false;
   return true;
+}
+
+const LEGACY_KEYS = ['kings-cup:v2', 'kings-cup:v3', 'kings-cup:v4'];
+
+function tryMigrate(): GameState | null {
+  for (const key of LEGACY_KEYS) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      localStorage.removeItem(key);
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const migrated = {
+        ...parsed,
+        version: STATE_VERSION,
+        color: (parsed.color as string | undefined) ?? '#FF4757',
+        cardOverrides: (parsed.cardOverrides as object | undefined) ?? {},
+        startingRules: (parsed.startingRules as string[] | undefined) ?? [],
+        matesCount: (parsed.matesCount as number | undefined) ?? 1,
+        players: Array.isArray(parsed.players)
+          ? (parsed.players as Record<string, unknown>[]).map((p) => ({
+              ...p,
+              color: (p.color as string | undefined) ?? '#FF4757',
+            }))
+          : [],
+      };
+      if (isValid(migrated)) {
+        saveState(migrated);
+        return migrated;
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return null;
 }
 
 export function loadState(): GameState | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
+    if (!raw) return tryMigrate();
     const parsed = JSON.parse(raw);
-    return isValid(parsed) ? parsed : null;
+    return isValid(parsed) ? parsed : tryMigrate();
   } catch {
     return null;
   }

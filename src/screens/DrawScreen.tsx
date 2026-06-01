@@ -1,7 +1,6 @@
 import type { GameState } from '../types';
 import { currentPlayer, deckRemaining, drawCard } from '../engine/game';
 import KingsCupMeter from '../components/KingsCupMeter';
-import StatusStrip from '../components/StatusStrip';
 import TopBar from '../components/TopBar';
 
 type Props = {
@@ -17,11 +16,11 @@ export default function DrawScreen({ state, setState, onOpenRules, onAskReset }:
 
   return (
     <main className="screen draw">
-      <TopBar onOpenRules={onOpenRules} onAskReset={onAskReset} />
+      <TopBar onOpenRules={onOpenRules} onAskReset={onAskReset} player={me} />
 
       <div className="draw-header">
         <p className="muted">It's your turn,</p>
-        <h1 className="turn-name">{me?.name}</h1>
+        <h1 className="turn-name" style={{ color: me?.color }}>{me?.name}</h1>
       </div>
 
       <div className="draw-stage">
@@ -30,6 +29,7 @@ export default function DrawScreen({ state, setState, onOpenRules, onAskReset }:
           onClick={() => setState((s) => drawCard(s))}
           aria-label="Draw a card"
           disabled={remaining === 0}
+          autoFocus
         >
           <span className="card-back">
             <span className="card-back-inner">
@@ -46,7 +46,6 @@ export default function DrawScreen({ state, setState, onOpenRules, onAskReset }:
         {remaining} {remaining === 1 ? 'card' : 'cards'} left
       </p>
 
-      <StatusStrip state={state} />
     </main>
   );
 }

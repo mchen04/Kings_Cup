@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { GameState } from '../types';
-import { CARD_RULES } from '../engine/rules';
+import { resolveRule } from '../engine/rules';
 import {
   addCustomRule,
   currentPlayer,
   endTurn,
   findPlayer,
-  setMate,
+  setMates,
 } from '../engine/game';
 import CardFace from '../components/CardFace';
-import StatusStrip from '../components/StatusStrip';
 import TopBar from '../components/TopBar';
 
 type Props = {
@@ -29,12 +28,12 @@ export default function RevealScreen({ state, setState, onOpenRules, onAskReset 
   const card = state.current;
   const [flipped, setFlipped] = useState(prefersReducedMotion());
   const [targetId, setTargetId] = useState<string | null>(null);
-  const [mateId, setMateId] = useState<string | null>(null);
+  const [mateIds, setMateIds] = useState<string[]>([]);
   const [ruleText, setRuleText] = useState('');
 
   useEffect(() => {
     setTargetId(null);
-    setMateId(null);
+    setMateIds([]);
     setRuleText('');
     if (prefersReducedMotion()) {
       setFlipped(true);
@@ -45,8 +44,23 @@ export default function RevealScreen({ state, setState, onOpenRules, onAskReset 
     return () => window.clearTimeout(id);
   }, [card?.id]);
 
+  const continueRef = useRef<{ fn: (() => void) | null; enabled: boolean }>({ fn: null, enabled: false });
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON') return;
+      if (!continueRef.current.enabled || !continueRef.current.fn) return;
+      e.preventDefault();
+      continueRef.current.fn();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   if (!card || !me) return null;
-  const rule = CARD_RULES[card.rank];
+  const rule = resolveRule(state, card.rank);
   const others = state.players.filter((p) => p.id !== me.id);
   const isFourthKing = card.rank === 'K' && state.kingsDrawn >= 4;
   const dethroned =
@@ -55,31 +69,36 @@ export default function RevealScreen({ state, setState, onOpenRules, onAskReset 
     state.prevQuestionMaster !== state.questionMaster;
   const dethronedPlayer = dethroned ? findPlayer(state, state.prevQuestionMaster) : null;
 
+  const matesCount = Math.min(state.matesCount, others.length);
+  const matesReady = mateIds.length >= matesCount;
+
   const handleContinue = () => {
     let next = state;
-    if (rule.needsMate && mateId) next = setMate(next, mateId);
+    if (rule.needsMate && mateIds.length > 0) next = setMates(next, mateIds);
     if (rule.needsRule && ruleText.trim()) next = addCustomRule(next, ruleText);
     setState(() => endTurn(next));
   };
 
   const continueEnabled =
     (!rule.needsTarget || !!targetId) &&
-    (!rule.needsMate || !!mateId) &&
+    (!rule.needsMate || matesReady) &&
     (!rule.needsRule || ruleText.trim().length > 0);
+
+  continueRef.current = { fn: handleContinue, enabled: continueEnabled };
 
   const continueLabel = isFourthKing
     ? 'End the game'
     : rule.needsTarget && !targetId
     ? 'Pick a player to continue'
-    : rule.needsMate && !mateId
-    ? 'Pick a buddy to continue'
+    : rule.needsMate && !matesReady
+    ? `Pick ${matesCount - mateIds.length} more ${matesCount - mateIds.length === 1 ? 'buddy' : 'buddies'}`
     : rule.needsRule && !ruleText.trim()
     ? 'Write a rule to continue'
     : 'Done — next player';
 
   return (
     <main className="screen reveal">
-      <TopBar onOpenRules={onOpenRules} onAskReset={onAskReset} />
+      <TopBar onOpenRules={onOpenRules} onAskReset={onAskReset} player={me} />
 
       <div className="reveal-stage">
         <CardFace card={card} flipped={flipped} />
@@ -92,12 +111,12 @@ export default function RevealScreen({ state, setState, onOpenRules, onAskReset 
           </h2>
           <p className="reveal-desc">
             {isFourthKing
-              ? `${me.name} drinks whatever is in the King's Cup. The game ends here.`
+              ? <><span style={{ color: me.color }}>{me.name}</span> drinks the King's Cup. The game ends here.</>
               : rule.description}
           </p>
           {dethroned && dethronedPlayer && (
             <p className="reveal-aside">
-              {dethronedPlayer.name} is no longer Question Master.
+              <span style={{ color: dethronedPlayer.color }}>{dethronedPlayer.name}</span> is no longer Question Master.
             </p>
           )}
         </div>
@@ -112,34 +131,48 @@ export default function RevealScreen({ state, setState, onOpenRules, onAskReset 
                 key={p.id}
                 className={`chip ${targetId === p.id ? 'on' : ''}`}
                 onClick={() => setTargetId(p.id)}
+                style={targetId === p.id ? undefined : { borderColor: p.color, color: p.color }}
                 type="button"
               >
                 {p.name}
               </button>
             ))}
           </div>
-          {targetId && (
+          {targetId && (() => { const t = findPlayer(state, targetId); return t ? (
             <p className="picker-note">
-              {findPlayer(state, targetId)?.name} takes a sip.
+              <span style={{ color: t.color }}>{t.name}</span> takes a sip.
             </p>
-          )}
+          ) : null; })()}
         </fieldset>
       )}
 
       {!isFourthKing && rule.needsMate && (
         <fieldset className="picker">
-          <legend>Pick a drinking buddy</legend>
+          <legend>
+            Pick {matesCount === 1 ? 'a drinking buddy' : `${matesCount} drinking buddies`}
+            {matesCount > 1 && ` (${mateIds.length}/${matesCount})`}
+          </legend>
           <div className="chip-row">
-            {others.map((p) => (
-              <button
-                key={p.id}
-                className={`chip ${mateId === p.id ? 'on' : ''}`}
-                onClick={() => setMateId(p.id)}
-                type="button"
-              >
-                {p.name}
-              </button>
-            ))}
+            {others.map((p) => {
+              const selected = mateIds.includes(p.id);
+              return (
+                <button
+                  key={p.id}
+                  className={`chip ${selected ? 'on' : ''}`}
+                  onClick={() => {
+                    if (selected) {
+                      setMateIds(mateIds.filter((id) => id !== p.id));
+                    } else if (mateIds.length < matesCount) {
+                      setMateIds([...mateIds, p.id]);
+                    }
+                  }}
+                  style={selected ? undefined : { borderColor: p.color, color: p.color }}
+                  type="button"
+                >
+                  {p.name}
+                </button>
+              );
+            })}
           </div>
         </fieldset>
       )}
@@ -168,7 +201,6 @@ export default function RevealScreen({ state, setState, onOpenRules, onAskReset 
         </button>
       </div>
 
-      <StatusStrip state={state} />
     </main>
   );
 }
